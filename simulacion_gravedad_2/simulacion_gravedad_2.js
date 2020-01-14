@@ -1,22 +1,22 @@
-final int SIZE_SCREEN = 900;
-final float G = 0.0001;
+var SIZE_SCREEN = 900;
+var G = 0.0001;
 
-float ESCALE = 1;
-int ORIGEN_X = SIZE_SCREEN / 2;
-int ORIGEN_Y = SIZE_SCREEN / 2;
-boolean PAUSED = true;
+var ESCALE = 1;
+var ORIGEN_X = SIZE_SCREEN / 2;
+var ORIGEN_Y = SIZE_SCREEN / 2;
+var PAUSED = true;
 
-int cantParticulas;
-Particula particulas[];
+var cantParticulas;
+var particulas = [];
 
 class Particula {
-  public float diametro = 1;
-  public float masa = 1;
-  public PVector posicion = new PVector(0,0);
-  public PVector velocidad = new PVector(0, 0);
-  public PVector aceleracion = new PVector(0, 0);
+  diametro = 1;
+  masa = 1;
+  posicion = createVector(0,0);
+  velocidad = createVector(0, 0);
+  aceleracion = createVector(0, 0);
   
-  public Particula(float diametro, float masa, float postAngulo, float postMag, float velAngulo, float velMag){
+  constructor(diametro, masa, postAngulo, postMag, velAngulo, velMag){
     this.diametro = diametro;
     this.masa = masa;
     this.posicion.x = cos(postAngulo);
@@ -29,7 +29,7 @@ class Particula {
     this.velocidad.mult(velMag);
   }
 
-  public void draw(int i) {
+  draw(i) {
     noStroke();
     fill(255,255,255);
     ellipse(ORIGEN_X + ESCALE * this.posicion.x, ORIGEN_Y + ESCALE * this.posicion.y, ESCALE * this.diametro, ESCALE * this.diametro);
@@ -42,28 +42,28 @@ class Particula {
     text("ay:" + this.aceleracion.y, 490, 15 + i * 15);
   }
 
-  void actualizar() {
+  actualizar() {
     this.velocidad.add(this.aceleracion);
     this.posicion.add(this.velocidad);
     //this.aceleracion.mult(0);
   }
 
-  void aplicarFuerza(PVector fuerza){
-    PVector fuerzaResultante = PVector.div(fuerza, this.masa);
+  aplicarFuerza(fuerza){
+    var fuerzaResultante =  p5.Vector.div(fuerza, this.masa);
     this.aceleracion.add(fuerzaResultante);
   }
 
-  void aplicarGravedadParticula(Particula p){
-    PVector direccion = PVector.sub(p.posicion, this.posicion);
-    float distancia = direccion.mag();
+  aplicarGravedadParticula(p){
+    var direccion =  p5.Vector.sub(p.posicion, this.posicion);
+    var distancia = direccion.mag();
     distancia = constrain(distancia, 5, 25);
-    float magnitud = (G * this.masa * p.masa) / (distancia * distancia);
+    var magnitud = (G * this.masa * p.masa) / (distancia * distancia);
     direccion.normalize();
     direccion.mult(magnitud);
     this.aplicarFuerza(direccion);
   }
 
-  void chequearBordes(){
+  chequearBordes(){
     // Check for bouncing.
     if (this.posicion.x > width) {
       this.posicion.x = width;
@@ -83,10 +83,10 @@ class Particula {
 
 }
 
-void actualizarParticulas() {
-  for (int i = 0; i < cantParticulas; ++i) {
+function actualizarParticulas() {
+  for (var i = 0; i < cantParticulas; ++i) {
     particulas[i].aceleracion.mult(0);
-    for (int j = 0; j < cantParticulas; ++j) {
+    for (var j = 0; j < cantParticulas; ++j) {
       if (i!=j){
         particulas[i].aplicarGravedadParticula(particulas[j]);
       }
@@ -95,14 +95,14 @@ void actualizarParticulas() {
   }
 }
 
-void drawParticulas(){
-  for (int i = 0; i < cantParticulas; ++i) {
+function drawParticulas(){
+  for (var i = 0; i < cantParticulas; ++i) {
     // particulas[i].chequearBordes();
     particulas[i].draw(i);
   }
 }
 
-void drawEjes(){
+function drawEjes(){
   stroke(0,255,0);
   line(SIZE_SCREEN/2, 0, SIZE_SCREEN/2, SIZE_SCREEN);
   line(0, SIZE_SCREEN/2, SIZE_SCREEN, SIZE_SCREEN/2);
@@ -112,49 +112,51 @@ void drawEjes(){
   //line(0,ORIGEN_Y,SIZE_SCREEN,ORIGEN_Y);
 }
 
-void drawSistema(){
+function drawSistema(){
   background(0,0,0);
   // drawEjes();
   drawParticulas();
 }
 
-void initParticulas(int cant){
+function initParticulas(cant){
   cantParticulas = cant;
-  particulas = new Particula[cantParticulas];
-  for (int i = 0; i < cantParticulas; ++i) {
-    float masa = random(1, 20);
-    float posAngulo = random(0, 360);
-    float posMag = random(0, SIZE_SCREEN);
-    float velAngulo = random(0, 360);
-    float velMag = random(0, 1);
-    particulas[i] = new Particula(masa, masa, posAngulo, posMag, velAngulo, velMag);
+  particulas= [];
+  // particulas = new Particula[cantParticulas];
+  for (var i = 0; i < cantParticulas; ++i) {
+    var masa = random(1, 20);
+    var posAngulo = random(0, 360);
+    var posMag = random(0, SIZE_SCREEN);
+    var velAngulo = random(0, 360);
+    var velMag = random(0, 1);
+    particulas.push(new Particula(masa, masa, posAngulo, posMag, velAngulo, velMag));
   }
 }
 
-void initSolTierra(){
+function initSolTierra(){
   cantParticulas = 5;
-  particulas = new Particula[cantParticulas];
-  particulas[0] = new Particula(40, 500000, 0, 0, 0, 0);
-  particulas[1] = new Particula(2, 80, -1.5708, 80, -1.5708*2, 2.5);
-  particulas[2] = new Particula(4, 100, 1.5708*2, 120, 1.5708, 2.5);
-  particulas[3] = new Particula(10, 160, 0, 300, -1.5708, 5);
-  particulas[4] = new Particula(8, 130, 0, -350, 1.5708, 5);
+  particulas = [];
+  // particulas = new Particula[cantParticulas];
+  particulas.push(new Particula(40, 500000, 0, 0, 0, 0));
+  particulas.push(new Particula(2, 80, -1.5708, 80, -1.5708*2, 2.5));
+  particulas.push(new Particula(4, 100, 1.5708*2, 120, 1.5708, 2.5));
+  particulas.push(new Particula(10, 160, 0, 300, -1.5708, 5));
+  particulas.push(new Particula(8, 130, 0, -350, 1.5708, 5));
 }
 
-void setup() {
-  size(900, 900);
+function setup() {
+  createCanvas(900, 900);
   // initParticulas(100);
   initSolTierra();
   drawSistema();
 }
 
-void draw() {
+function draw() {
   if (PAUSED) return;
   actualizarParticulas();
   drawSistema();
 }
 
-void keyPressed() {
+function keyPressed() {
   if (key == '+') {
     ESCALE *= 2;
   } else if (key == '-') {
