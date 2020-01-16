@@ -58,11 +58,11 @@ class Particula {
     fill(this.color);
     var shape = this.posicion.copy().mult(ESCALE).add(origenX, origenY);
     ellipse(shape.x, shape.y, ESCALE * this.diametro, ESCALE * this.diametro);
-    if (!SHOW_TRAZO) return;
+    // if (!SHOW_TRAZO && !this.trazoLen) return;
     for(var j=0; j<this.trazo.length; j++){
       var trazo = this.trazo[this.trazo.length-j-1];
       var p = trazo.copy().mult(ESCALE).add(origenX, origenY);
-      fill(this.color);
+      fill(100,255,255);
       ellipse(p.x, p.y, 1, 1);
       // text(p.toString(), 10, 15 + j * 15);
     }
@@ -80,9 +80,9 @@ class Particula {
     this.velocidad.add(this.aceleracion);
     this.posicion.add(this.velocidad);
     //this.aceleracion.mult(0);
-    if (!SHOW_TRAZO) return;
+    if (!SHOW_TRAZO && !this.trazoLen) return;
     this.trazo.push(this.posicion.copy());
-    if (this.trazo.length>TRAZOLEN){
+    if (this.trazo.length>(this.trazoLen? this.trazoLen : TRAZOLEN)){
       this.trazo.shift();
     }
   }
@@ -120,6 +120,28 @@ class Particula {
     }
   }
 
+  fusionarCon(p) {
+    if (!this.blackHole && p.blackHole){
+      return p.fusionarCon(this);
+    }
+    uniones.push({
+      i: this.posicion.copy(),
+      j: p.posicion.copy(),
+      k: this.posicion.copy().add(p.posicion).div(2)
+    });
+    this.cant += p.cant;
+    if (!this.blackHole) {
+      var grayMap = map(this.cant, 2, 50, 100, 255);
+      var gray = Math.round(grayMap).toString(16);
+      gray = gray.length>1? gray : '0'+gray;
+      this.color = '#'+gray+gray+gray;
+    }
+    this.masa += p.masa;
+    this.posicion.add(p.posicion).div(2);
+    this.velocidad.add(p.velocidad).div(2);
+    return this;
+  }
+
 }
 
 function actualizarParticulas() {
@@ -136,32 +158,21 @@ function actualizarParticulas() {
 
 function verificarUnionDeParticulas() {
   for (var i = 0; i < particulas.length; ++i) {
-    if (!particulas[i]) continue;
+    var pi = particulas[i];
+    if (!pi) continue;
     for (var j = 0; j < particulas.length; ++j) {
+      var pj = particulas[j];
       if (i!=j){
-        if (!particulas[j]) continue;
-        const dist = particulas[i].posicion.dist(particulas[j].posicion);
+        if (!pj) continue;
+        const dist = pi.posicion.dist(pj.posicion);
         if (dist<0.5){
           // PAUSED = true;
-          // var colores = ['brown', 'red', '#00ff00', 'cyan'];
-          uniones.push({
-            i: particulas[i].posicion.copy(),
-            j: particulas[j].posicion.copy(),
-            k: particulas[i].posicion.copy().add(particulas[j].posicion).div(2)
-          });
-          particulas[i].cant += particulas[j].cant;
-          var grayMap = map(particulas[i].cant, 2, 50, 100, 255);
-          var gray = Math.round(grayMap).toString(16);
-          gray = gray.length>1? gray : '0'+gray;
-          particulas[i].color = '#'+gray+gray+gray;
-          particulas[i].masa += particulas[j].masa;
-          particulas[i].posicion.add(particulas[j].posicion).div(2);
-          particulas[i].velocidad.add(particulas[j].velocidad).div(2);
+          particulas[i] = pi.fusionarCon(pj);
           particulas[j] = null;
         }
       }
     }
-    particulas[i].actualizar();
+    pi.actualizar();
   }
   particulas = particulas.filter(p => p);
 }
@@ -242,12 +253,14 @@ function init_2_particulas(){
   SHOW_TRAZO = false;
 
   var cant = 500;
-  particulas = [
-    // new Particula('blue', 100, 5000, 0, 0, 0, 0)
-  ];
+  particulas = [];
+  var bh = new Particula('red', 5, 50000, 0, 0, 0, 0);
+  bh.blackHole = true;
+  bh.trazoLen = 1000;
+  particulas.push(bh);
   var mover = 0;
   for (var i = 0; i < cant; ++i) {
-    var masa = random(1, 10);
+    var masa = random(1, 15);
     var posAngulo = random(0, 1.5708*4);
     var posMag = random(0, SIZE_SCREEN);
     var velAngulo = posAngulo - 1.5708 + random(-1.5708/4, 1.5708/4);
