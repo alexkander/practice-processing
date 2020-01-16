@@ -153,7 +153,6 @@ function verificarUnionDeParticulas() {
           var grayMap = map(particulas[i].cant, 2, 50, 100, 255);
           var gray = Math.round(grayMap).toString(16);
           gray = gray.length>1? gray : '0'+gray;
-          console.log(particulas[i].cant, grayMap, gray);
           particulas[i].color = '#'+gray+gray+gray;
           particulas[i].masa += particulas[j].masa;
           particulas[i].posicion.add(particulas[j].posicion).div(2);
