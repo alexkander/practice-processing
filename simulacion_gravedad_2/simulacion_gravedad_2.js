@@ -137,6 +137,7 @@ class Particula {
       this.color = '#'+gray+gray+gray;
     }
     this.masa += p.masa;
+    this.diametro *= 2;
     this.posicion.add(p.posicion).div(2);
     this.velocidad.add(p.velocidad).div(2);
     return this;
