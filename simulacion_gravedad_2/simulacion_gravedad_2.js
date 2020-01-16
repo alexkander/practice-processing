@@ -1,9 +1,10 @@
 var SIZE_SCREEN = 800;
-var ESCALE = 0.1;
+var ESCALE = 1;
 var G = 0.0001;
-var TRAZOLEN = 1000;
+var TRAZOLEN = 25;
 var SHOW_TRAZO = true;
 var PAUSED = false;
+var systemIdx = 1;
 
 var ORIGEN_X = SIZE_SCREEN / 2;
 var ORIGEN_Y = SIZE_SCREEN / 2;
@@ -11,6 +12,8 @@ var origenX = ORIGEN_X;
 var origenY = ORIGEN_Y;
 
 var particulas = [];
+
+var uniones = [];
 
 function randn_bm(min, max, skew) {
     var u = 0, v = 0;
@@ -141,12 +144,20 @@ function verificarUnionDeParticulas() {
         if (dist<0.5){
           // PAUSED = true;
           // var colores = ['brown', 'red', '#00ff00', 'cyan'];
+          uniones.push({
+            i: particulas[i].posicion.copy(),
+            j: particulas[j].posicion.copy(),
+            k: particulas[i].posicion.copy().add(particulas[j].posicion).div(2)
+          });
           particulas[i].cant += particulas[j].cant;
-          var gray = map(particulas[i].cant, 0, 50, 25, 255).toString(16);
+          var grayMap = map(particulas[i].cant, 2, 50, 100, 255);
+          var gray = Math.round(grayMap).toString(16);
+          gray = gray.length>1? gray : '0'+gray;
+          console.log(particulas[i].cant, grayMap, gray);
           particulas[i].color = '#'+gray+gray+gray;
           particulas[i].masa += particulas[j].masa;
-          particulas[i].posicion.add(particulas[j].posicion).div(0);
-          particulas[i].velocidad.add(particulas[j].velocidad).div(0);
+          particulas[i].posicion.add(particulas[j].posicion).div(2);
+          particulas[i].velocidad.add(particulas[j].velocidad).div(2);
           particulas[j] = null;
         }
       }
@@ -182,39 +193,39 @@ function drawEjes(){
   // line(0,origenY,SIZE_SCREEN,origenY);
 }
 
+function drawUniones() {
+  for (let i = 0; i < uniones.length; i++) {
+    const union = uniones[i];
+    stroke(0, 255, 0);
+    var shapei = union.i.copy().mult(ESCALE).add(origenX, origenY);
+    var shapek = union.k.copy().mult(ESCALE).add(origenX, origenY);
+    line(shapei.x, shapei.y, shapek.x, shapek.y);
+  }
+}
+
 function drawSistema(){
   background(0,0,0);
   drawParticulas();
   drawEjes();
+  drawUniones();
 }
 
-function initParticulas(cant){
-  particulas = [
-    // new Particula('blue', 100, 5000, 0, 0, 0, 0)
-  ];
-  var mover = 0;
-  for (var i = 0; i < cant; ++i) {
-    var masa = random(1, 10);
-    var posAngulo = random(0, 1.5708*4);
-    var posMag = random(0, SIZE_SCREEN);
-    var velAngulo = posAngulo - 1.5708 + random(-1.5708/4, 1.5708/4);
-    var velMag = map(posMag, 0, SIZE_SCREEN, 0, 6);
-    var p = new Particula('gray', masa, masa, posAngulo, posMag, velAngulo, velMag);
-    p.posicion.add(mover, mover);
-    particulas.push(p);
-  }
-}
+function init_1_sistemaSolar(){
+  G = 0.0001;
+  TRAZOLEN = 1000;
+  SHOW_TRAZO = true;
 
-function initSolTierra(){
   particulas.length = 5;
   particulas = [];
   var mover = 0;
   var MUL_DIST = 4;
   var MUL_VEL = 2;
-  var sol1 = new Particula('green', 25, 300000, 1.5708*0, 40, 1.5708*3, 1);
-  sol1.posicion.add(mover, mover); particulas.push(sol1);
-  var sol2 = new Particula('green', 15, 200000, 1.5708*2, 40, 1.5708*1, 1);
-  sol2.posicion.add(mover, mover); particulas.push(sol2);
+  var sol = new Particula('green', 40, 500000, 0, 0, 0, 0);
+  sol.posicion.add(mover, mover); particulas.push(sol);
+  // var sol1 = new Particula('green', 25, 300000, 1.5708*0, 40, 1.5708*3, 1);
+  // sol1.posicion.add(mover, mover); particulas.push(sol1);
+  // var sol2 = new Particula('green', 15, 200000, 1.5708*2, 40, 1.5708*1, 1);
+  // sol2.posicion.add(mover, mover); particulas.push(sol2);
   var mercurio = new Particula('purple', 2, 80, 1.5708*0, 80*MUL_DIST, 1.5708*3, 2.5*MUL_VEL);
   mercurio.posicion.add(mover, mover); particulas.push(mercurio);
   var venus = new Particula('blue', 4, 100, 1.5708*2, 120*MUL_DIST, 1.5708*1, 3*MUL_VEL);
@@ -226,15 +237,39 @@ function initSolTierra(){
   
 }
 
-function drawSystem(){
-  initParticulas(500);
-  initSolTierra();
-  // drawSistema();
+function init_2_particulas(){
+  G = 0.015;
+  TRAZOLEN = 0;
+  SHOW_TRAZO = false;
+
+  var cant = 500;
+  particulas = [
+    // new Particula('blue', 100, 5000, 0, 0, 0, 0)
+  ];
+  var mover = 0;
+  for (var i = 0; i < cant; ++i) {
+    var masa = random(1, 10);
+    var posAngulo = random(0, 1.5708*4);
+    var posMag = random(0, SIZE_SCREEN);
+    var velAngulo = posAngulo - 1.5708 + random(-1.5708/4, 1.5708/4);
+    var velMag = map(posMag, 0, SIZE_SCREEN, 0, 6);
+    var p = new Particula('#323232', masa, masa, posAngulo, posMag, velAngulo, velMag);
+    p.posicion.add(mover, mover);
+    particulas.push(p);
+  }
+}
+
+var sistemas = [init_1_sistemaSolar, init_2_particulas];
+
+function initSistema(){
+  uniones = [];
+  sistemas[systemIdx]();
+  drawSistema();
 }
 
 function setup() {
   createCanvas(800, 800);
-  drawSystem();
+  initSistema();
 }
 
 function draw() {
@@ -257,12 +292,18 @@ function keyPressed() {
     origenY -=10; 
   } else if (keyCode == 40) { // down
     origenY +=10;
-  } else if (key == 'p') { // down
+  } else if (key == 'p') { // p
     PAUSED = !PAUSED;
-  } else if (key == 'r') { // down
-    drawSystem();
-  } else if (key == 't') { // down
+  } else if (key == 'r') { // r
+    initSistema();
+  } else if (key == 't') { // t
     SHOW_TRAZO = !SHOW_TRAZO;
+  } else if (key == '1') { // 1
+    systemIdx = 0;
+    initSistema();
+  } else if (key == '2') { // @
+    systemIdx = 1;
+    initSistema();
   }
   drawSistema();
 }
